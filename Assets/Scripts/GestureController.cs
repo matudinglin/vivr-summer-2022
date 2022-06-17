@@ -16,17 +16,6 @@ namespace DigitalRubyShared
     public class GestureController : MonoBehaviour
     {
         public Camera viewCamera;
-
-        private TapGestureRecognizer tapGesture;
-        private TapGestureRecognizer doubleTapGesture;
-        private TapGestureRecognizer tripleTapGesture;
-        private SwipeGestureRecognizer swipeGesture;
-        private PanGestureRecognizer panGesture;
-        private ScaleGestureRecognizer scaleGesture;
-        private RotateGestureRecognizer rotateGesture;
-        private LongPressGestureRecognizer longPressGesture;
-        private readonly List<Vector3> swipeLines = new List<Vector3>();
-
         LevelController levelController;
         AvatarController avatarController;
         IntersectionController intersectionController;
@@ -34,6 +23,20 @@ namespace DigitalRubyShared
         TTSController ttsController;
         CameraController cameraController;
         POIController poiController;
+
+        private ScaleGestureRecognizer scaleGesture;
+        private TapGestureRecognizer FPDoubleTapGesture;
+        private LongPressGestureRecognizer FPlongPressGesture;
+        //private PanGestureRecognizer panGesture;
+        //private RotateGestureRecognizer rotateGesture;
+        private TapGestureRecognizer SRTapGesture;
+        private TapGestureRecognizer ATapGesture;
+        private TapGestureRecognizer ADoubleTapGesture;
+        private TapGestureRecognizer ATripleTapGesture;
+        private SwipeGestureRecognizer ASwipeGesture;
+        private readonly List<Vector3> swipeLines = new List<Vector3>();
+
+
         bool zooming = false;
 
         Camera activeCamera
@@ -66,10 +69,28 @@ namespace DigitalRubyShared
             Vector3 end = activeCamera.ScreenToWorldPoint(new Vector3(velocityXScreen, velocityYScreen, 0.0f));
             Vector3 velocity = (end - origin);
         }
+        IEnumerator Zoom(float scale, GameObject room)
+        {
+            zooming = true;
+            if (scale > 1f)
+            {
+                // Zoom in
+                Debug.Log("Zoom in");
+                levelController.ZoomIn(room, audioController);
+            }
+            else
+            {
+                // Zoom out
+                Debug.Log("Zoom out");
+                levelController.ZoomOut(room, audioController);
+            }
+            yield return new WaitForSeconds(.8f);
+            zooming = false;
+        }
 
         private void HandleSwipe(float endX, float endY)
         {
-            Vector2 start = new Vector2(swipeGesture.StartFocusX, swipeGesture.StartFocusY);
+            Vector2 start = new Vector2(ASwipeGesture.StartFocusX, ASwipeGesture.StartFocusY);
             Vector3 startWorld = activeCamera.ScreenToWorldPoint(start);
             Vector3 endWorld = activeCamera.ScreenToWorldPoint(new Vector2(endX, endY));
             float distance = Vector3.Distance(startWorld, endWorld);
@@ -90,7 +111,7 @@ namespace DigitalRubyShared
                 Debug.Log("Raycast hits: " + collisions.Length + ", start: " + startWorld + ", end: " + endWorld + ", distance: " + distance);
 
                 Vector3 origin = activeCamera.ScreenToWorldPoint(Vector3.zero);
-                Vector3 end = activeCamera.ScreenToWorldPoint(new Vector3(swipeGesture.VelocityX, swipeGesture.VelocityY, activeCamera.nearClipPlane));
+                Vector3 end = activeCamera.ScreenToWorldPoint(new Vector3(ASwipeGesture.VelocityX, ASwipeGesture.VelocityY, activeCamera.nearClipPlane));
                 Vector3 velocity = (end - origin);
                 Vector2 force = velocity * 500.0f;
 
@@ -100,41 +121,6 @@ namespace DigitalRubyShared
                 }
             }
         }
-
-        private void TapGestureCallback(GestureRecognizer gesture)
-        {
-            if (gesture.State == GestureRecognizerState.Ended)
-            {
-                DebugText("Tapped at {0}, {1}", gesture.FocusX, gesture.FocusY);
-                Debug.Log("Tapped at: " + gesture.FocusX.ToString() + ", " + gesture.FocusY.ToString());
-                ViewLevel viewLevel = levelController.viewLevel;
-                if (viewLevel == ViewLevel.AVATAR)
-                {
-                    // it should shoot a laser to that direction and return the object name
-                    PlayHint();
-                }
-                else if (viewLevel == ViewLevel.SINGLE_ROOM)
-                {
-                    // this does not work
-                    // FIXME
-                    Debug.Log("calling speak here");
-                    ttsController.Speak(intersectionController.exploringPOI.description);
-                }
-            }
-        }
-
-        private void CreateTapGesture()
-        {
-            tapGesture = new TapGestureRecognizer();
-            tapGesture.StateUpdated += TapGestureCallback;
-            tapGesture.RequireGestureRecognizerToFail = doubleTapGesture;
-            FingersScript.Instance.AddGesture(tapGesture);
-        }
-
-        /**
- * It will shoot a laser 
- * 
- * **/
         private void shootLaser()
         {
             if (Input.GetMouseButtonDown(0))
@@ -154,67 +140,154 @@ namespace DigitalRubyShared
             }
         }
 
-        private void DoubleTapGestureCallback(GestureRecognizer gesture)
+        // ====================================================================================================================
+        // Change Level
+        // ====================================================================================================================
+        
+        private void ScaleGestureCallback(GestureRecognizer gesture)
         {
-            if (gesture.State == GestureRecognizerState.Ended)
+            DebugText("Scaled: {0}, Focus: {1}, {2}", scaleGesture.ScaleMultiplier, scaleGesture.FocusX, scaleGesture.FocusY);
+            float scale = scaleGesture.ScaleMultiplier;
+            if (gesture.State == GestureRecognizerState.Executing
+                && !zooming && scale != 1f)
             {
-                var viewLevel = levelController.viewLevel;
-                if (viewLevel == ViewLevel.FLOOR_PLAN)
-                {
-                    var focusRoom = intersectionController.focusRoom;
-                    if (focusRoom != null)
-                    {
-                        var description = focusRoom.GetComponent<Semantic>().description;
-                        if (description != null)
-                        {
-                            Debug.Log("description: " + description);
-                            ttsController.Speak(description);
-                        }
-                    }
-                }
-                // FIXME
-                // if it is in the avatar view then, double tap would be the object identification
-                else if (viewLevel == ViewLevel.AVATAR)
-                {
-                    // let avatar shoot a laser to identify an object
-                    //
-                    Debug.Log("Captured double tap in avatar mode");
-                    shootLaser();
-      
-                    //if (levelController == null)
-                    //{
-                    //    Debug.Log("levelController is null");
-                    //}
-                    //else
-                    //{
-                    //    Debug.Log("levelController is not null");
-                    //}
-                    
-
-                    //avatarController.shootLaser();
-                    
-                }
-
-                // FIXME
+                StartCoroutine(Zoom(scale, intersectionController.focusRoom));
+                SwitchLevelGesture(levelController.viewLevel);
             }
         }
 
-        private void CreateDoubleTapGesture()
+        private void ScaleGestureCreate()
         {
-            doubleTapGesture = new TapGestureRecognizer();
-            doubleTapGesture.NumberOfTapsRequired = 2;
-            doubleTapGesture.StateUpdated += DoubleTapGestureCallback;
-            doubleTapGesture.RequireGestureRecognizerToFail = tripleTapGesture;
-            FingersScript.Instance.AddGesture(doubleTapGesture);
+            scaleGesture = new ScaleGestureRecognizer();
+            scaleGesture.StateUpdated += ScaleGestureCallback;
+            FingersScript.Instance.AddGesture(scaleGesture);
         }
 
-        private void SwipeGestureCallback(GestureRecognizer gesture)
+        // ====================================================================================================================
+        // Floor Plan Gestures
+        // ====================================================================================================================
+        private void FPDoubleTapGestureCallback(GestureRecognizer gesture)
         {
-           
+            if (gesture.State == GestureRecognizerState.Ended)
+            {
+                var focusRoom = intersectionController.focusRoom;
+                if (focusRoom != null)
+                {
+                    var description = focusRoom.GetComponent<Semantic>().description;
+                    if (description != null)
+                    {
+                        Debug.Log("description: " + description);
+                        ttsController.Speak(description);
+                    }
+                }
+            }
+        }
+
+        private void FPDoubleTapGestureCreate()
+        {
+            FPDoubleTapGesture = new TapGestureRecognizer();
+            FPDoubleTapGesture.NumberOfTapsRequired = 2;
+            FPDoubleTapGesture.StateUpdated += FPDoubleTapGestureCallback;
+            FPDoubleTapGesture.RequireGestureRecognizerToFail = ATripleTapGesture;
+            FingersScript.Instance.AddGesture(FPDoubleTapGesture);
+        }
+
+        //private void PanGestureCallback(GestureRecognizer gesture)
+        //{
+        //    if (gesture.State == GestureRecognizerState.Executing)
+        //    {
+        //        //  Debug.Log("herrrr");
+        //        DebugText("Panned, Location: {0}, {1}, Delta: {2}, {3}", gesture.FocusX, gesture.FocusY, gesture.DeltaX, gesture.DeltaY);
+        //        float deltaX = panGesture.DeltaX / 25.0f;
+        //        float deltaY = panGesture.DeltaY / 25.0f;
+        //    }
+        //}
+
+        //private void PanGestureCreate()
+        //{
+        //    panGesture = new PanGestureRecognizer();
+        //    panGesture.MinimumNumberOfTouchesToTrack = 2;
+        //    panGesture.StateUpdated += PanGestureCallback;
+        //    FingersScript.Instance.AddGesture(panGesture);
+        //}
+
+        //private void RotateGestureCallback(GestureRecognizer gesture)
+        //{
+        //    if (gesture.State == GestureRecognizerState.Executing)
+        //    {
+        //    }
+        //}
+
+        //private void CreateRotateGesture()
+        //{
+        //    rotateGesture = new RotateGestureRecognizer();
+        //    rotateGesture.StateUpdated += RotateGestureCallback;
+        //    FingersScript.Instance.AddGesture(rotateGesture);
+        //}
+
+        private void FPLongPressGestureCallback(GestureRecognizer gesture)
+        {
+
+            Debug.Log("Captured long press");
+            if (gesture.State == GestureRecognizerState.Began)
+            {
+                DebugText("Long press began: {0}, {1}", gesture.FocusX, gesture.FocusY);
+                BeginDrag(gesture.FocusX, gesture.FocusY);
+            }
+            else if (gesture.State == GestureRecognizerState.Executing)
+            {
+                DebugText("Long press moved: {0}, {1}", gesture.FocusX, gesture.FocusY);
+                DragTo(gesture.FocusX, gesture.FocusY);
+            }
+            else if (gesture.State == GestureRecognizerState.Ended)
+            {
+                DebugText("Long press end: {0}, {1}, delta: {2}, {3}", gesture.FocusX, gesture.FocusY, gesture.DeltaX, gesture.DeltaY);
+                EndDrag(FPlongPressGesture.VelocityX, FPlongPressGesture.VelocityY);
+            }
+        }
+
+        private void FPLongPressGestureCreate()
+        {
+            FPlongPressGesture = new LongPressGestureRecognizer();
+            FPlongPressGesture.MaximumNumberOfTouchesToTrack = 1;
+            FPlongPressGesture.StateUpdated += FPLongPressGestureCallback;
+            FingersScript.Instance.AddGesture(FPlongPressGesture);
+        }
+
+        // ====================================================================================================================
+        // SINGLE ROOM Gestures
+        // ====================================================================================================================
+        private void SRTapGestureCallback(GestureRecognizer gesture)
+        {
+            if (gesture.State == GestureRecognizerState.Ended)
+            {
+                DebugText("Tapped at {0}, {1}", gesture.FocusX, gesture.FocusY);
+                Debug.Log("Tapped at: " + gesture.FocusX.ToString() + ", " + gesture.FocusY.ToString());
+                // this does not work
+                // FIXME
+                Debug.Log("calling speak here");
+                ttsController.Speak(intersectionController.exploringPOI.description);
+            }
+        }
+
+        private void SRTapGestureCreate()
+        {
+            SRTapGesture = new TapGestureRecognizer();
+            SRTapGesture.StateUpdated += SRTapGestureCallback;
+            SRTapGesture.RequireGestureRecognizerToFail = FPDoubleTapGesture;
+            FingersScript.Instance.AddGesture(SRTapGesture);
+        }
+
+        // ====================================================================================================================
+        // AVATAR Gestures
+        // ====================================================================================================================
+        private void ASwipeGestureCallback(GestureRecognizer gesture)
+        {
+
             if (gesture.State == GestureRecognizerState.Ended)
             {
                 HandleSwipe(gesture.FocusX, gesture.FocusY);
-                // DebugText("Swiped from {0},{1} to {2},{3}; velocity: {4}, {5}", gesture.StartFocusX, gesture.StartFocusY, gesture.FocusX, gesture.FocusY, swipeGesture.VelocityX, swipeGesture.VelocityY);
+                // DebugText("Swiped from {0},{1} to {2},{3}; velocity: {4}, {5}", gesture.StartFocusX, gesture.StartFocusY, gesture.FocusX, gesture.FocusY, ASwipeGesture.VelocityX, ASwipeGesture.VelocityY);
                 var deltaX = gesture.StartFocusX - gesture.FocusX;
                 var deltaY = gesture.StartFocusY - gesture.FocusY;
                 DebugText("Swiped. Delta: ({0}, {1})", deltaX, deltaY);
@@ -238,7 +311,7 @@ namespace DigitalRubyShared
                 }
                 else
                 {
-                    
+
                     // Vertical
                     if (deltaY > 0)
                     {
@@ -255,123 +328,16 @@ namespace DigitalRubyShared
             }
         }
 
-        private void CreateSwipeGesture()
+        private void ASwipeGestureCreate()
         {
-            swipeGesture = new SwipeGestureRecognizer();
-            swipeGesture.Direction = SwipeGestureRecognizerDirection.Any;
-            swipeGesture.StateUpdated += SwipeGestureCallback;
-            swipeGesture.DirectionThreshold = 1.0f; // allow a swipe, regardless of slope
-            FingersScript.Instance.AddGesture(swipeGesture);
+            ASwipeGesture = new SwipeGestureRecognizer();
+            ASwipeGesture.Direction = SwipeGestureRecognizerDirection.Any;
+            ASwipeGesture.StateUpdated += ASwipeGestureCallback;
+            ASwipeGesture.DirectionThreshold = 1.0f; // allow a swipe, regardless of slope
+            FingersScript.Instance.AddGesture(ASwipeGesture);
         }
 
-        private void PanGestureCallback(GestureRecognizer gesture)
-        {
-            if (gesture.State == GestureRecognizerState.Executing)
-            {
-              //  Debug.Log("herrrr");
-                DebugText("Panned, Location: {0}, {1}, Delta: {2}, {3}", gesture.FocusX, gesture.FocusY, gesture.DeltaX, gesture.DeltaY);
-                float deltaX = panGesture.DeltaX / 25.0f;
-                float deltaY = panGesture.DeltaY / 25.0f;
-            }
-        }
-
-        private void CreatePanGesture()
-        {
-            panGesture = new PanGestureRecognizer();
-            panGesture.MinimumNumberOfTouchesToTrack = 2;
-            panGesture.StateUpdated += PanGestureCallback;
-            FingersScript.Instance.AddGesture(panGesture);
-        }
-
-        private void ScaleGestureCallback(GestureRecognizer gesture)
-        {
-            DebugText("Scaled: {0}, Focus: {1}, {2}", scaleGesture.ScaleMultiplier, scaleGesture.FocusX, scaleGesture.FocusY);
-            float scale = scaleGesture.ScaleMultiplier;
-            if (gesture.State == GestureRecognizerState.Executing
-                && !zooming && scale != 1f)
-            {
-                StartCoroutine(Zoom(scale, intersectionController.focusRoom));
-            }
-        }
-
-        IEnumerator Zoom(float scale, GameObject room)
-        {
-            zooming = true;
-            if (scale > 1f)
-            {
-                // Zoom in
-                Debug.Log("Zoom in");
-                levelController.ZoomIn(room, audioController);
-            }
-            else
-            {
-                // Zoom out
-                Debug.Log("Zoom out");
-                levelController.ZoomOut(room, audioController);
-            }
-            yield return new WaitForSeconds(.8f);
-            zooming = false;
-        }
-
-        private void CreateScaleGesture()
-        {
-            scaleGesture = new ScaleGestureRecognizer();
-            scaleGesture.StateUpdated += ScaleGestureCallback;
-            FingersScript.Instance.AddGesture(scaleGesture);
-        }
-
-        private void RotateGestureCallback(GestureRecognizer gesture)
-        {
-            if (gesture.State == GestureRecognizerState.Executing)
-            {
-            }
-        }
-
-        private void CreateRotateGesture()
-        {
-            rotateGesture = new RotateGestureRecognizer();
-            rotateGesture.StateUpdated += RotateGestureCallback;
-            FingersScript.Instance.AddGesture(rotateGesture);
-        }
-
-        private void LongPressGestureCallback(GestureRecognizer gesture)
-        {
-
-            Debug.Log("Captured long press");
-            if (gesture.State == GestureRecognizerState.Began)
-            {
-                DebugText("Long press began: {0}, {1}", gesture.FocusX, gesture.FocusY);
-                BeginDrag(gesture.FocusX, gesture.FocusY);
-            }
-            else if (gesture.State == GestureRecognizerState.Executing)
-            {
-                DebugText("Long press moved: {0}, {1}", gesture.FocusX, gesture.FocusY);
-                DragTo(gesture.FocusX, gesture.FocusY);
-            }
-            else if (gesture.State == GestureRecognizerState.Ended)
-            {
-                DebugText("Long press end: {0}, {1}, delta: {2}, {3}", gesture.FocusX, gesture.FocusY, gesture.DeltaX, gesture.DeltaY);
-                EndDrag(longPressGesture.VelocityX, longPressGesture.VelocityY);
-            }
-        }
-
-        private void PlayHint()
-        {
-            //
-            Debug.Log("Try to call PlayPOIHint()");
-            poiController.PlayPOIHint();
-        }
-
-
-        private void CreateLongPressGesture()
-        {
-            longPressGesture = new LongPressGestureRecognizer();
-            longPressGesture.MaximumNumberOfTouchesToTrack = 1;
-            longPressGesture.StateUpdated += LongPressGestureCallback;
-            FingersScript.Instance.AddGesture(longPressGesture);
-        }
-
-        private void PlatformSpecificViewTapUpdated(GestureRecognizer gesture)
+        private void ATripleTapGestureCallBack(GestureRecognizer gesture)
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
@@ -379,14 +345,72 @@ namespace DigitalRubyShared
             }
         }
 
-        private void CreatePlatformSpecificViewTripleTapGesture()
+        private void ATripleTapGestureCreate()
         {
-            tripleTapGesture = new TapGestureRecognizer();
-            tripleTapGesture.StateUpdated += PlatformSpecificViewTapUpdated;
-            tripleTapGesture.NumberOfTapsRequired = 3;
-            // tripleTapGesture.PlatformSpecificView = bottomLabel.gameObject;
-            FingersScript.Instance.AddGesture(tripleTapGesture);
+            ATripleTapGesture = new TapGestureRecognizer();
+            ATripleTapGesture.StateUpdated += ATripleTapGestureCallBack;
+            ATripleTapGesture.NumberOfTapsRequired = 3;
+            // ATripleTapGesture.PlatformSpecificView = bottomLabel.gameObject;
+            FingersScript.Instance.AddGesture(ATripleTapGesture);
         }
+
+        private void ADoubleTapGestureCallback(GestureRecognizer gesture)
+        {
+            if (gesture.State == GestureRecognizerState.Ended)
+            {
+                // FIXME
+                // if it is in the avatar view then, double tap would be the object identification
+                // let avatar shoot a laser to identify an object
+                Debug.Log("Captured double tap in avatar mode");
+                shootLaser();
+
+                //if (levelController == null)
+                //{
+                //    Debug.Log("levelController is null");
+                //}
+                //else
+                //{
+                //    Debug.Log("levelController is not null");
+                //}
+
+                //avatarController.shootLaser();
+
+                // FIXME
+            }
+        }
+
+        private void ADoubleTapGestureCreate()
+        {
+            ADoubleTapGesture = new TapGestureRecognizer();
+            ADoubleTapGesture.NumberOfTapsRequired = 2;
+            ADoubleTapGesture.StateUpdated += ADoubleTapGestureCallback;
+            ADoubleTapGesture.RequireGestureRecognizerToFail = ATripleTapGesture;
+            FingersScript.Instance.AddGesture(ADoubleTapGesture);
+        }
+
+        private void ATapGestureCallback(GestureRecognizer gesture)
+        {
+            if (gesture.State == GestureRecognizerState.Ended)
+            {
+                DebugText("Tapped at {0}, {1}", gesture.FocusX, gesture.FocusY);
+                Debug.Log("Tapped at: " + gesture.FocusX.ToString() + ", " + gesture.FocusY.ToString());
+                // it should shoot a laser to that direction and return the object name
+                Debug.Log("Try to call PlayPOIHint()");
+                poiController.PlayPOIHint();
+            }
+        }
+        private void ATapGestureCreate()
+        {
+            ATapGesture = new TapGestureRecognizer();
+            ATapGesture.StateUpdated += ATapGestureCallback;
+            ATapGesture.RequireGestureRecognizerToFail = FPDoubleTapGesture;
+            FingersScript.Instance.AddGesture(ATapGesture);
+        }
+
+        // ====================================================================================================================
+        // Gesture System Control
+        // ====================================================================================================================
+
 
         private static bool? CaptureGestureHandler(GameObject obj)
         {
@@ -405,24 +429,58 @@ namespace DigitalRubyShared
 
             // fall-back to default behavior for anything else
             return null;
+        }   
+
+        private void SwitchLevelGesture(ViewLevel viewLevel)
+        {
+            FingersScript.Instance.ResetState(true);
+            switch (viewLevel)
+            {
+                case ViewLevel.FLOOR_PLAN:
+                    CreateFloorPlanGesture();
+                    break;
+                case ViewLevel.SINGLE_ROOM:
+                    CreateSingleRoomGesture();
+                    break;
+                case ViewLevel.AVATAR:
+                    CreateAvatarGesture();
+                    break;
+            }
+        }
+
+
+        private void CreateFloorPlanGesture()
+        {
+            ScaleGestureCreate();
+            FPDoubleTapGestureCreate();
+            FPLongPressGestureCreate();
+        }
+
+        private void CreateSingleRoomGesture()
+        {
+            ScaleGestureCreate();
+            SRTapGestureCreate();
+        }
+
+        private void CreateAvatarGesture()
+        {
+            ScaleGestureCreate();
+            ATripleTapGestureCreate();
+            ADoubleTapGestureCreate();
+            ATapGestureCreate();
+            ASwipeGestureCreate();
         }
 
         private void Start()
         {
-            // don't reorder the creation of these :)
-            CreatePlatformSpecificViewTripleTapGesture();
-            CreateDoubleTapGesture();
-            CreateTapGesture();
-            CreateSwipeGesture();
-            CreatePanGesture();
-            CreateScaleGesture();
-            CreateRotateGesture();
-            CreateLongPressGesture();
-
-           
+            // Get Components
+            ttsController = GetComponent<TTSController>();
+            cameraController = GetComponent<CameraController>();
+            levelController = GetComponent<LevelController>();
+            intersectionController = GetComponent<IntersectionController>();
+            poiController = GetComponent<POIController>();
             avatarController = GetComponent<AvatarController>();
-
-            if(avatarController == null)
+            if (avatarController == null)
             {
                 Debug.Log("In start: avatar is null");
             }
@@ -431,24 +489,32 @@ namespace DigitalRubyShared
             {
                 Debug.Log("In start: audio is null");
             }
-            ttsController = GetComponent<TTSController>();
-            cameraController = GetComponent<CameraController>();
-            levelController = GetComponent<LevelController>();
-            intersectionController = GetComponent<IntersectionController>();
-            poiController = GetComponent<POIController>();
+
+            // Create Gesture
+            SwitchLevelGesture(levelController.viewLevel);
+
+            //// don't reorder the creation of these :)
+            //CreatePlatformSpecificViewTripleTapGesture();
+            //CreateDoubleTapGesture();
+            //CreateTapGesture();
+            //CreateSwipeGesture();
+            //CreatePanGesture();
+            //CreateScaleGesture();
+            //CreateRotateGesture();
+            //CreateLongPressGesture();
 
             // pan, scale and rotate can all happen simultaneously
-            panGesture.AllowSimultaneousExecution(scaleGesture);
-            panGesture.AllowSimultaneousExecution(rotateGesture);
-            scaleGesture.AllowSimultaneousExecution(rotateGesture);
-
+            //panGesture.AllowSimultaneousExecution(scaleGesture);
+            //panGesture.AllowSimultaneousExecution(rotateGesture);
+            //scaleGesture.AllowSimultaneousExecution(rotateGesture);
             // prevent the one special no-pass button from passing through,
-            //  even though the parent scroll view allows pass through (see FingerScript.PassThroughObjects)
+            // even though the parent scroll view allows pass through (see FingerScript.PassThroughObjects)
             FingersScript.Instance.CaptureGestureHandler = CaptureGestureHandler;
         }
 
         private void Update()
         {
+
         }
 
         private void LateUpdate()
