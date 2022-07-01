@@ -6,7 +6,7 @@ using UnityEngine;
 
 public enum WalkingDirections
 {
-    left, right, forward, backward
+    hold, left, right, forward, backward
 }
 
 public class AvatarController : MonoBehaviour
@@ -71,6 +71,8 @@ public class AvatarController : MonoBehaviour
             footStepAudioSource.PlayOneShot(footsteClips[Random.Range(0, footsteClips.Length - 1)]);
             switch (walkDirection)
             {
+                case WalkingDirections.hold:
+                    break;
                 case WalkingDirections.backward:
                     transform.position = Vector3.Lerp(transform.position, transform.position + -vertical * moveSpeed, footStepTIME);
                     break;
@@ -78,10 +80,10 @@ public class AvatarController : MonoBehaviour
                     transform.position = Vector3.Lerp(transform.position, transform.position + vertical * moveSpeed, footStepTIME);
                     break;
                 case WalkingDirections.left:
-                    transform.position = Vector3.Lerp(transform.position, transform.position + horizontal * moveSpeed, footStepTIME);
+                    transform.position = Vector3.Lerp(transform.position, transform.position + -horizontal * moveSpeed, footStepTIME);
                     break;
                 case WalkingDirections.right:
-                    transform.position = Vector3.Lerp(transform.position, transform.position + -horizontal * moveSpeed, footStepTIME);
+                    transform.position = Vector3.Lerp(transform.position, transform.position + horizontal * moveSpeed, footStepTIME);
                     break;
                 default:
                     break;
