@@ -5,7 +5,10 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Scene.unity
     guid: 2f461c0586d0d5941bd34599d5bf4398
+  - enabled: 1
+    path: Assets/Scenes/Scene Taka.unity
+    guid: cc8ab0ce0d446a949837a80d4f78345a
   m_configObjects: {}

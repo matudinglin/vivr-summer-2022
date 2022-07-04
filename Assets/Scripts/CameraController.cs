@@ -6,6 +6,7 @@ public class CameraController : MonoBehaviour
 {
     // Start is called before the first frame update
     public Camera viewCamera;
+    public Camera followCamera;
     public Vector3 floorPlanViewPoint;
     public GameObject defaultRoom;
     public bool hideOut = false;
@@ -144,7 +145,7 @@ public class CameraController : MonoBehaviour
         {
             var origY = avatar.transform.position.y;
             var roomPos = room.transform.position;
-            avatar.transform.position = new Vector3(roomPos.x, origY, roomPos.z);// put avatar into the room
+            //avatar.transform.position = new Vector3(roomPos.x, origY, roomPos.z);// put avatar into the room
             viewCamera.enabled = false;
             avatarCamera.enabled = true;
             return true;
@@ -167,10 +168,11 @@ public class CameraController : MonoBehaviour
             var roomCenter = room.transform.position;
             float prevY = viewCamera.transform.position.y;
             avatarCamera.enabled = false;
-            viewCamera.enabled = true;
+            viewCamera.enabled = false;
+            followCamera.enabled = true;
             currentRoom = room;
 
-            viewCamera.transform.position = new Vector3(roomCenter.x, prevY, roomCenter.z);
+            viewCamera.gameObject.transform.position = new Vector3(roomCenter.x, prevY, roomCenter.z);
             avatar.transform.position = new Vector3(roomCenter.x, avatar.transform.position.y, roomCenter.z);
             viewCamera.orthographicSize = singleRoomViewSize;
 

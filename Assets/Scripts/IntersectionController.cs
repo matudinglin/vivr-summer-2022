@@ -189,14 +189,17 @@ public class IntersectionController : MonoBehaviour
 			}
 			backgroundController.PlayBackground(hitRoom);
 			focusRoom = hitRoom;
-			ray.origin = roomHit.point;
+			ray.origin = roomHit.point - new Vector3(0, 0.1f, 0);
 			// MoveAvatar(roomHit.point);
 			RaycastHit poiHit;
 			if (Physics.Raycast(ray, out poiHit, 100f))
 			{
+				Debug.DrawLine(ray.origin, poiHit.point, Color.red);
+
 				GameObject hitPOI = poiHit.collider.gameObject;
 				if(hitPOI.CompareTag("Wall"))
 				{
+
 					// commented for testing
 					//Debug.Log("Hit wall:" + hitPOI.name);
 					hapticController.PlayWallFeedback();
