@@ -76,34 +76,34 @@ public class CameraController : MonoBehaviour
     }
 
     // here, 1f is the default value
-    public void Move(float direction = 1f)
-    {
-        if (IsImmersiveMode())
-        {
-            // this should be fpcamera
-            //Vector3 forward = avatarCamera.transform.forward;
-            //Vector3 forward = avatarController.fpCamera.transform.forward;
-            Vector3 forward = avatarController.fpForword;
-            //Debug.Log(forward.ToString());
+    //public void Move(float direction = 1f)
+    //{
+    //    if (IsImmersiveMode())
+    //    {
+    //        // this should be fpcamera
+    //        //Vector3 forward = avatarCamera.transform.forward;
+    //        //Vector3 forward = avatarController.fpCamera.transform.forward;
+    //        Vector3 forward = avatarController.fpForword;
+    //        //Debug.Log(forward.ToString());
 
-            Debug.Log("forward x: " + forward.x);
-            Debug.Log("forward z: " + forward.z);
-            Vector3 delta = new Vector3(forward.x, 0, forward.z).normalized;
-            //if (direction == -1f) {
-            //    delta = new Vector3(forward.x, 0, forward.z).normalized;
-            //}
-           // Vector3 delta = new Vector3(forward.x, 0, forward.z).normalized;
-            // avatar.transform.Translate(delta * sensitivity);
-            //Debug.Log("delta: " + delta.ToString());
-            //Debug.Log("delta * direction: " + (delta * direction).ToString());
+    //        Debug.Log("forward x: " + forward.x);
+    //        Debug.Log("forward z: " + forward.z);
+    //        Vector3 delta = new Vector3(forward.x, 0, forward.z).normalized;
+    //        //if (direction == -1f) {
+    //        //    delta = new Vector3(forward.x, 0, forward.z).normalized;
+    //        //}
+    //       // Vector3 delta = new Vector3(forward.x, 0, forward.z).normalized;
+    //        // avatar.transform.Translate(delta * sensitivity);
+    //        //Debug.Log("delta: " + delta.ToString());
+    //        //Debug.Log("delta * direction: " + (delta * direction).ToString());
 
-            // call the move method, if it is not colliding, then it will move
-            if (!avatarController.Move(delta * direction))
-            {
-                hapticController.PlayWallFeedback(true);
-            }
-        }
-    }
+    //        // call the move method, if it is not colliding, then it will move
+    //        if (!avatarController.Move(delta * direction))
+    //        {
+    //            hapticController.PlayWallFeedback(true);
+    //        }
+    //    }
+    //}
 
     bool VisibleToAvatar(GameObject gameObject)
     {

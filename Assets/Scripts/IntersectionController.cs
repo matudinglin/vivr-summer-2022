@@ -16,6 +16,7 @@ public class IntersectionController : MonoBehaviour
 	CameraController cameraController;
 	GameObject selectObj;
 	public POI exploringPOI;
+	public POI latestPOI = default;
 	bool isExploring = false;
 	bool die = true;
 	float distance;
@@ -59,7 +60,7 @@ public class IntersectionController : MonoBehaviour
 			Vector3 d = avatarController.fpForword;
 			
 
-			Debug.Log("This is forward: " + d.ToString());
+			// Debug.Log("This is forward: " + d.ToString());
 
 			// shoot a list of arrays, and report the names of objects from bottom to top or from top to bottom
 
@@ -164,6 +165,7 @@ public class IntersectionController : MonoBehaviour
 		{
 			Debug.Log("Mariupol");
 			ttsController.Speak(poi.poiName + distance + " meters" ); //async
+			latestPOI = poi;
 		}
 	}
 

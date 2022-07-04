@@ -2,13 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
+
+public enum WalkingDirections
+{
+    hold, left, right, forward, backward
+}
+
 public class AvatarController : MonoBehaviour
 {
-    // Start is called before the first frame update
-    public Camera fpCamera;  // camera used for immersive mode
+    public Camera fpCamera;  
 
-    Vector3 velocity = Vector3.zero;
-    public float moveSpeed = 1.0f;
+    public float moveSpeed;
     public bool collide = false;
     public bool willCollide = false;
     public Vector3 fpForword;
@@ -19,36 +24,75 @@ public class AvatarController : MonoBehaviour
     HapticController hapticController;
     public Material hitMaterial;
 
+    public AudioSource footStepAudioSource = default;
+    public AudioClip[] footsteClips = default;
+    private static float footStepTIME = 0.3f;
+    private float footStepTimer = footStepTIME;
+
     void Start()
     {
         //the starting position is unknown
         hapticController = GetComponent<HapticController>();
-        //Debug.Log("hapticController == null: " + hapticController == null);
+        moveSpeed = 10.0f;
     }
 
-    public bool Move(Vector3 delta)
+    //public bool Move(Vector3 delta)
+    //{
+    //    // the condition will be updated in FixedUpdate
+    //    if (!willCollide)
+    //    {
+    //        //Debug.Log("It is moving!!!");
+    //        //Debug.Log("transform.position before: " + transform.position.ToString());
+    //        Debug.Log("delta: " + delta.ToString());
+    //        transform.position = Vector3.SmoothDamp(transform.position, transform.position + delta * moveSpeed, ref velocity, 0.1f);
+    //        //Debug.Log("transform.position after: " + transform.position.ToString());
+    //        return true;
+    //    }
+    //    else
+    //    {
+    //        // when it is collide
+    //        // if it is going to the other direction, then it is able to leave
+    //        // we would capture the previous Delta,
+    //        // check the sign of previous x and previous z
+    //        // if this time, the previous 
+
+    //        return false; // true or false will tigger the audio feedback
+    //    }
+
+    //}
+
+    public void MoveAvatar(WalkingDirections walkDirection)
     {
-        // the condition will be updated in FixedUpdate
-        if (!willCollide)
+        Vector3 horizontal = new Vector3(fpForword.z, 0, fpForword.x).normalized;
+        Vector3 vertical = new Vector3(fpForword.x, 0, fpForword.z).normalized;
+        footStepTimer -= Time.deltaTime;
+        if(footStepTimer < 0 )
         {
-            //Debug.Log("It is moving!!!");
-            //Debug.Log("transform.position before: " + transform.position.ToString());
-            Debug.Log("delta: " + delta.ToString());
-            transform.position = Vector3.SmoothDamp(transform.position, transform.position + delta * moveSpeed, ref velocity, 0.1f);
-            //Debug.Log("transform.position after: " + transform.position.ToString());
-            return true;
-        } else
-        {
-            // when it is collide
-            // if it is going to the other direction, then it is able to leave
-            // we would capture the previous Delta,
-            // check the sign of previous x and previous z
-            // if this time, the previous 
-            
-            return false; // true or false will tigger the audio feedback
+            footStepAudioSource.PlayOneShot(footsteClips[Random.Range(0, footsteClips.Length - 1)]);
+            switch (walkDirection)
+            {
+                case WalkingDirections.hold:
+                    break;
+                case WalkingDirections.backward:
+                    transform.position = Vector3.Lerp(transform.position, transform.position + -vertical * moveSpeed, footStepTIME);
+                    break;
+                case WalkingDirections.forward:
+                    transform.position = Vector3.Lerp(transform.position, transform.position + vertical * moveSpeed, footStepTIME);
+                    break;
+                case WalkingDirections.left:
+                    transform.position = Vector3.Lerp(transform.position, transform.position + -horizontal * moveSpeed, footStepTIME);
+                    break;
+                case WalkingDirections.right:
+                    transform.position = Vector3.Lerp(transform.position, transform.position + horizontal * moveSpeed, footStepTIME);
+                    break;
+                default:
+                    break;
+            }
+            footStepTimer = footStepTIME;
         }
-        
     }
+
+
 
     Vector3 getFpcameraForward()
     {
