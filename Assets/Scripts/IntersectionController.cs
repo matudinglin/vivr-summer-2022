@@ -185,12 +185,16 @@ public class IntersectionController : MonoBehaviour
 			GameObject hitRoom = roomHit.collider.gameObject;
 			// commented for testing
 			//Debug.Log("Hit room:" + hitRoom.name);
-			if (hitRoom != focusRoom)
+			if (levelController.viewLevel == ViewLevel.FLOOR_PLAN)
 			{
-				backgroundController.PauseBackground(focusRoom);
+				if (hitRoom != focusRoom)
+				{
+					backgroundController.PauseBackground(focusRoom);
+					focusRoom = hitRoom;
+				}
+				backgroundController.PlayBackground(hitRoom);
+				
 			}
-			backgroundController.PlayBackground(hitRoom);
-			focusRoom = hitRoom;
 			ray.origin = roomHit.point - new Vector3(0, 0.1f, 0);
 			// MoveAvatar(roomHit.point);
 			RaycastHit poiHit;

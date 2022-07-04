@@ -11,6 +11,7 @@ public enum WalkingDirections
 
 public class AvatarController : MonoBehaviour
 {
+    public Camera roomCamera;
     public Camera fpCamera;  
 
     public float moveSpeed;
@@ -22,12 +23,15 @@ public class AvatarController : MonoBehaviour
     public float wallDistance = 1.0f;
     private Vector3 previousDelta;
     HapticController hapticController;
+    public LevelController levelController;
     public Material hitMaterial;
 
     public AudioSource footStepAudioSource = default;
     public AudioClip[] footsteClips = default;
     private static float footStepTIME = 0.3f;
     private float footStepTimer = footStepTIME;
+
+    public Vector3 targetPosition;
 
     void Start()
     {
@@ -60,6 +64,36 @@ public class AvatarController : MonoBehaviour
     //    }
 
     //}
+    
+    //This method moves the avatar in room mode.
+    public void MoveInRoomMode(Vector3 screenPosition)
+    {
+        //roomCamera = roomCamera.gameObject.GetComponent<Camera>();
+        //Vector3 midPoint = Input.GetTouch(0).position;
+        //Debug.LogWarning("Screen Position: " + midPoint);
+        //var ray = cam.ScreenPointToRay(midPoint);
+        var ray = roomCamera.ScreenPointToRay(screenPosition);
+        Debug.DrawLine(ray.origin, ray.origin - new Vector3(0, 5f, 0), Color.yellow);
+        //Debug.LogWarning("oneFinger!" + ray.origin);
+
+
+        RaycastHit hitInfo;
+        if (Physics.Raycast(ray, out hitInfo) && hitInfo.collider.CompareTag("Room"))
+        {
+
+            Debug.DrawLine(ray.origin, hitInfo.point, Color.red);
+            ray.origin = hitInfo.point - new Vector3(0, 0.1f, 0);
+
+        }
+        if (Physics.Raycast(ray, out hitInfo) && !hitInfo.collider.CompareTag("Wall")) // if the ray is hitting anything
+        {
+            //Debug.Log(!hitInfo.collider.CompareTag("Room"));
+            Debug.DrawLine(ray.origin, hitInfo.point, Color.cyan);
+            targetPosition = new Vector3(hitInfo.point.x, hitInfo.point.y, hitInfo.point.z) + new Vector3(0, 0.5f, 0);
+            //Vector3 targetPosition = cam.ScreenToWorldPoint(midPoint) - offset + new Vector3(0,height,0);
+        }
+    }
+
 
     public void MoveAvatar(WalkingDirections walkDirection)
     {
@@ -223,31 +257,35 @@ public class AvatarController : MonoBehaviour
 
     void FixedUpdate()
     {
-        
-//        Vector3 o = fpCamera.transform.position;
-//        Vector3 d = fpCamera.transform.forward;
-//        Debug.Log("fpCamerca position2-----: " + fpCamera.transform.position);
-//        Debug.DrawRay(o, d * wallDistance, Color.blue);
-//        Ray ray = new Ray(o, d);
-//        if (Physics.Raycast(ray, out RaycastHit raycastHit, wallDistance))
-//        {
-//// Debug.Log("Fixed update____----here");
-//            var hitObj = raycastHit.collider.gameObject;
-//            Debug.Log("Collide the wall!");
-//            if (hitObj.tag == "Wall")
-//            {
-//                willCollide = true;
-//            }
-//            else
-//            {
-//                willCollide = false;
-//            }
-//        }
-//        else
-//        {
-//            willCollide = false;
-//        }
-//        //Debug.Log("willCollide: " + collide);
-//        // FIXME
+        if (levelController.viewLevel == ViewLevel.SINGLE_ROOM)
+        { 
+            //Debug.Log(targetPosition);
+            transform.position = Vector3.MoveTowards(transform.position, targetPosition, 0.3f);
+        }
+        //        Vector3 o = fpCamera.transform.position;
+        //        Vector3 d = fpCamera.transform.forward;
+        //        Debug.Log("fpCamerca position2-----: " + fpCamera.transform.position);
+        //        Debug.DrawRay(o, d * wallDistance, Color.blue);
+        //        Ray ray = new Ray(o, d);
+        //        if (Physics.Raycast(ray, out RaycastHit raycastHit, wallDistance))
+        //        {
+        //// Debug.Log("Fixed update____----here");
+        //            var hitObj = raycastHit.collider.gameObject;
+        //            Debug.Log("Collide the wall!");
+        //            if (hitObj.tag == "Wall")
+        //            {
+        //                willCollide = true;
+        //            }
+        //            else
+        //            {
+        //                willCollide = false;
+        //            }
+        //        }
+        //        else
+        //        {
+        //            willCollide = false;
+        //        }
+        //        //Debug.Log("willCollide: " + collide);
+        //        // FIXME
     }
 }

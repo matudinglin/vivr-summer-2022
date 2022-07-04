@@ -30,6 +30,7 @@ namespace DigitalRubyShared
         private LongPressGestureRecognizer FPlongPressGesture;
         
         private TapGestureRecognizer SRTapGesture;
+        private TapGestureRecognizer SRDoubleTapGesture;
 
         private TapGestureRecognizer ATapGesture;
         private TapGestureRecognizer ADoubleTapGesture;
@@ -220,6 +221,18 @@ namespace DigitalRubyShared
         // ====================================================================================================================
         // SINGLE ROOM Gestures
         // ====================================================================================================================
+        private void SRDoubleTapGestureCallback(GestureRecognizer gesture)
+        {
+            
+            if (gesture.State == GestureRecognizerState.Ended)
+            {
+                //Debug.LogWarning("SRDouble called");
+                Debug.LogWarning("Tapped at: " + gesture.FocusX.ToString() + ", " + gesture.FocusY.ToString());
+                Vector3 screenPosition = new Vector3(gesture.FocusX, gesture.FocusY, 0);
+                //Vector3 cameraPosition = viewCamera.ScreenToWorldPoint(screenPosition);
+                avatarController.MoveInRoomMode(screenPosition);
+            }
+        }
         private void SRTapGestureCallback(GestureRecognizer gesture)
         {
             if (gesture.State == GestureRecognizerState.Ended)
@@ -228,7 +241,8 @@ namespace DigitalRubyShared
                 // this does not work
                 // FIXME
                 Debug.Log("calling speak here");
-                ttsController.Speak(intersectionController.exploringPOI.description);
+                intersectionController.Exploring(new Vector2 (gesture.FocusX, gesture.FocusY));
+                //ttsController.Speak(intersectionController.exploringPOI.description);
             }
         }
 
@@ -236,9 +250,17 @@ namespace DigitalRubyShared
         {
             SRTapGesture = new TapGestureRecognizer();
             SRTapGesture.StateUpdated += SRTapGestureCallback;
-            SRTapGesture.RequireGestureRecognizerToFail = FPDoubleTapGesture;
+            SRTapGesture.RequireGestureRecognizerToFail = SRDoubleTapGesture;
             FingersScript.Instance.AddGesture(SRTapGesture);
         }
+        private void SRDoubleTapGestureCreate()
+        {
+            SRDoubleTapGesture = new TapGestureRecognizer();
+            SRDoubleTapGesture.NumberOfTapsRequired = 2;
+            SRDoubleTapGesture.StateUpdated += SRDoubleTapGestureCallback;
+            SRDoubleTapGesture.RequireGestureRecognizerToFail = ATripleTapGesture;
+            FingersScript.Instance.AddGesture(SRDoubleTapGesture);
+        } 
 
         // ====================================================================================================================
         // AVATAR Gestures
@@ -461,6 +483,7 @@ namespace DigitalRubyShared
         private void CreateSingleRoomGesture()
         {
             ScaleGestureCreate();
+            SRDoubleTapGestureCreate();
             SRTapGestureCreate();
         }
 

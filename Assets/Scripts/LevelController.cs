@@ -12,6 +12,7 @@ public class LevelController : MonoBehaviour
 
     // Start is called before the first frame update
     //??? Here!!!!   public ViewLevel viewLevel;??
+    public GameObject avatar;
     public ViewLevel viewLevel = ViewLevel.SINGLE_ROOM;
     public GameObject defaultRoom;
     CameraController cameraController;
@@ -86,6 +87,8 @@ public class LevelController : MonoBehaviour
             viewLevel = ViewLevel.SINGLE_ROOM;
             ShowObjects();
             HideOtherRooms(room);
+            avatar.transform.position = room.transform.position + new Vector3(0,0.5f,0);
+            avatar.GetComponent<AvatarController>().targetPosition = room.transform.position + new Vector3(0, 0.5f, 0);
         }
     }
 
