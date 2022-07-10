@@ -15,7 +15,6 @@ namespace DigitalRubyShared
 
     public class GestureController : MonoBehaviour
     {
-        public Camera viewCamera;
         public GameObject avatar;
         private AvatarController avatarController;
         private LevelController levelController;
@@ -39,7 +38,8 @@ namespace DigitalRubyShared
 
         private WalkingDirections walkDirection;
 
-        private static int repeatCOUNT = 5;
+        private bool isSitting = false;
+        private bool isOpen = false;
 
         private readonly List<Vector3> swipeLines = new List<Vector3>();
 
@@ -250,6 +250,7 @@ namespace DigitalRubyShared
             {
                 var deltaX = gesture.StartFocusX - gesture.FocusX;
                 var deltaY = gesture.StartFocusY - gesture.FocusY;
+                walkDirection = WalkingDirections.hold;
                 if (Mathf.Abs(deltaX) > Mathf.Abs(deltaY))
                 {
                     // Horizontal
@@ -303,13 +304,14 @@ namespace DigitalRubyShared
             Debug.Log("Captured long press");
             if(gesture.State == GestureRecognizerState.Began)
             {
-                ttsController.Speak("Start Walking.");
+                //ttsController.SpeakInterruptively("Start Walking.");
                 walkDirection = WalkingDirections.hold;
             }
             else if (gesture.State == GestureRecognizerState.Executing)
             {
                 var deltaX = gesture.StartFocusX - gesture.FocusX;
                 var deltaY = gesture.StartFocusY - gesture.FocusY;
+                walkDirection = WalkingDirections.hold;
                 if (Mathf.Abs(deltaX) > Mathf.Abs(deltaY))
                 {
                     // Horizontal
@@ -395,19 +397,45 @@ namespace DigitalRubyShared
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
-                
+                if (intersectionController.selectObj.name.Contains("Chair"))
+                {
+                    if (!isSitting)
+                    {
+                        ttsController.SpeakInterruptively("Sit down on the chair.");
+                        Transform chair = intersectionController.selectObj.transform;
+                        avatarController.transform.position = chair.position;
+                        isSitting = true;
+                    }
+                    else
+                    {
+                        ttsController.SpeakInterruptively("Sit up from the chair.");
+                        isSitting = false;
+                    }
+                }
+                else if (intersectionController.selectObj.name.Contains("Door")) 
+                {
+                    GameObject door = intersectionController.selectObj;
+                    Animator animator = door.GetComponent<Animator>();
+                    if (!isOpen)
+                    {
+                        animator.Play("Door Open");
+                        isOpen = true;
+                    }
+                    else
+                    {
+                        animator.Play("Door Close");
+                        isOpen = false;
+                    }
+                }
             }
         }
         private void ATapGestureCreate()
         {
             ATapGesture = new TapGestureRecognizer();
             ATapGesture.StateUpdated += ATapGestureCallback;
-            ATapGesture.RequireGestureRecognizerToFail = FPDoubleTapGesture;
+            ATapGesture.RequireGestureRecognizerToFail = ADoubleTapGesture;
             FingersScript.Instance.AddGesture(ATapGesture);
         }
-
-
-
 
         // ====================================================================================================================
         // Gesture System Control

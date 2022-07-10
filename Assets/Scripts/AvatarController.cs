@@ -68,22 +68,42 @@ public class AvatarController : MonoBehaviour
         footStepTimer -= Time.deltaTime;
         if(footStepTimer < 0 )
         {
-            footStepAudioSource.PlayOneShot(footsteClips[Random.Range(0, footsteClips.Length - 1)]);
+            
             switch (walkDirection)
             {
                 case WalkingDirections.hold:
                     break;
                 case WalkingDirections.backward:
-                    transform.position = Vector3.Lerp(transform.position, transform.position + -vertical * moveSpeed, footStepTIME);
+                    if (Physics.Raycast(transform.position, -vertical, 2))
+                    {
+                        //hapticController.PlayWallFeedback();
+                    }
+                        footStepAudioSource.PlayOneShot(footsteClips[Random.Range(0, footsteClips.Length - 1)]);
+                        transform.position = Vector3.Lerp(transform.position, transform.position + -vertical * moveSpeed, footStepTIME);
                     break;
                 case WalkingDirections.forward:
-                    transform.position = Vector3.Lerp(transform.position, transform.position + vertical * moveSpeed, footStepTIME);
+                    if (Physics.Raycast(transform.position, vertical, 2))
+                    {
+                        //hapticController.PlayWallFeedback();
+                    }
+                        footStepAudioSource.PlayOneShot(footsteClips[Random.Range(0, footsteClips.Length - 1)]);
+                        transform.position = Vector3.Lerp(transform.position, transform.position + vertical * moveSpeed, footStepTIME);
                     break;
                 case WalkingDirections.left:
-                    transform.position = Vector3.Lerp(transform.position, transform.position + -horizontal * moveSpeed, footStepTIME);
+                    if (Physics.Raycast(transform.position, -horizontal, 2))
+                    {
+                        //hapticController.PlayWallFeedback();
+                    }
+                        footStepAudioSource.PlayOneShot(footsteClips[Random.Range(0, footsteClips.Length - 1)]);
+                        transform.position = Vector3.Lerp(transform.position, transform.position + -horizontal * moveSpeed, footStepTIME);
                     break;
                 case WalkingDirections.right:
-                    transform.position = Vector3.Lerp(transform.position, transform.position + horizontal * moveSpeed, footStepTIME);
+                    if (Physics.Raycast(transform.position, horizontal, 2))
+                    {
+                        //hapticController.PlayWallFeedback();
+                    }
+                        footStepAudioSource.PlayOneShot(footsteClips[Random.Range(0, footsteClips.Length - 1)]);
+                        transform.position = Vector3.Lerp(transform.position, transform.position + horizontal * moveSpeed, footStepTIME);
                     break;
                 default:
                     break;

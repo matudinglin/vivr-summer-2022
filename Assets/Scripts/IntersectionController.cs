@@ -14,7 +14,7 @@ public class IntersectionController : MonoBehaviour
 	TTSController ttsController;
 	HapticController hapticController;
 	CameraController cameraController;
-	GameObject selectObj;
+	public GameObject selectObj;
 	public POI exploringPOI;
 	public POI latestPOI = default;
 	bool isExploring = false;
