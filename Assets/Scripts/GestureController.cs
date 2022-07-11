@@ -15,7 +15,6 @@ namespace DigitalRubyShared
 
     public class GestureController : MonoBehaviour
     {
-        public Camera viewCamera;
         public GameObject avatar;
         private AvatarController avatarController;
         private LevelController levelController;
@@ -194,7 +193,7 @@ namespace DigitalRubyShared
 
         private void FPLongPressGestureCallback(GestureRecognizer gesture)
         {
-
+           //Debug.Log("Camera: "+ FingersScript.getcamera)
             Debug.Log("Captured long press");
             if (gesture.State == GestureRecognizerState.Began)
             {

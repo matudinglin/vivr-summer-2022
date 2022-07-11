@@ -87,8 +87,11 @@ public class LevelController : MonoBehaviour
             viewLevel = ViewLevel.SINGLE_ROOM;
             ShowObjects();
             HideOtherRooms(room);
-            avatar.transform.position = room.transform.position + new Vector3(0,0.5f,0);
-            avatar.GetComponent<AvatarController>().targetPosition = room.transform.position + new Vector3(0, 0.5f, 0);
+            //avatar.transform.position = room.transform.position + new Vector3(0,0.5f,0);
+            Vector2 screenCenter = new Vector2(cameraController.viewCamera.scaledPixelWidth / 2, 
+                                                cameraController.viewCamera.scaledPixelHeight / 2);
+            Debug.LogWarning(screenCenter);
+            avatar.GetComponent<AvatarController>().MoveInRoomMode(screenCenter);
         }
     }
 

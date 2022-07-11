@@ -5,9 +5,16 @@ using UnityEngine;
 public class CameraController : MonoBehaviour
 {
     // Start is called before the first frame update
+    public enum RoomViewMode
+    {
+        cameraStatic,
+        cameraFollow
+    };
+
     public Camera viewCamera;
     public Camera followCamera;
     public Camera mapCamera;
+    public RoomViewMode mode;
     public Vector3 floorPlanViewPoint;
     public GameObject defaultRoom;
     public bool hideOut = false;
@@ -171,15 +178,27 @@ public class CameraController : MonoBehaviour
         if (room != null)
         {
             var roomCenter = room.transform.position;
+            //Debug.Log("Room center:" + roomCenter);
+
             float prevY = viewCamera.transform.position.y;
             viewCamera.enabled = false;
-            viewCamera = followCamera;
+            if (mode == RoomViewMode.cameraStatic)
+            {
+                viewCamera = mapCamera;
+                viewCamera.gameObject.transform.position = new Vector3(roomCenter.x, prevY, roomCenter.z);
+                //avatar.transform.position = new Vector3(roomCenter.x, avatar.transform.position.y, roomCenter.z);
+                viewCamera.orthographicSize = singleRoomViewSize;
+
+
+            }
+            else if(mode == RoomViewMode.cameraFollow)
+            {
+                viewCamera = followCamera;
+            }
             viewCamera.enabled = true;
+            avatarController.roomCamera = viewCamera;
             currentRoom = room;
 
-            //viewCamera.gameObject.transform.position = new Vector3(roomCenter.x, prevY, roomCenter.z);
-            //avatar.transform.position = new Vector3(roomCenter.x, avatar.transform.position.y, roomCenter.z);
-            //viewCamera.orthographicSize = singleRoomViewSize;
 
             return true;
         }

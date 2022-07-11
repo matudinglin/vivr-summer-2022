@@ -30,6 +30,7 @@ public class AvatarController : MonoBehaviour
     public AudioClip[] footsteClips = default;
     private static float footStepTIME = 0.3f;
     private float footStepTimer = footStepTIME;
+    private CameraController camControl;
 
     public Vector3 targetPosition;
 
@@ -64,16 +65,12 @@ public class AvatarController : MonoBehaviour
     //    }
 
     //}
-    
-    //This method moves the avatar in room mode.
-    public void MoveInRoomMode(Vector3 screenPosition)
+    public void teleportToPosition(Vector3 screenPosition)
     {
-        //roomCamera = roomCamera.gameObject.GetComponent<Camera>();
-        //Vector3 midPoint = Input.GetTouch(0).position;
-        //Debug.LogWarning("Screen Position: " + midPoint);
-        //var ray = cam.ScreenPointToRay(midPoint);
         var ray = roomCamera.ScreenPointToRay(screenPosition);
-        Debug.DrawLine(ray.origin, ray.origin - new Vector3(0, 5f, 0), Color.yellow);
+        Debug.LogWarning(roomCamera.transform.position);
+        //Debug.LogWarning(ray.origin);
+        Debug.DrawLine(ray.origin, ray.origin - new Vector3(0, 0.5f, 0), Color.yellow);
         //Debug.LogWarning("oneFinger!" + ray.origin);
 
 
@@ -82,7 +79,7 @@ public class AvatarController : MonoBehaviour
         {
 
             Debug.DrawLine(ray.origin, hitInfo.point, Color.red);
-            ray.origin = hitInfo.point - new Vector3(0, 0.1f, 0);
+            ray.origin = hitInfo.point - new Vector3(0, 0.5f, 0);
 
         }
         if (Physics.Raycast(ray, out hitInfo) && !hitInfo.collider.CompareTag("Wall")) // if the ray is hitting anything
@@ -94,6 +91,37 @@ public class AvatarController : MonoBehaviour
         }
     }
 
+    //This method moves the avatar in room mode.
+    public void MoveInRoomMode(Vector3 screenPosition)
+    {
+        //roomCamera = roomCamera.gameObject.GetComponent<Camera>();
+        //Vector3 midPoint = Input.GetTouch(0).position;
+        //Debug.LogWarning("Screen Position: " + midPoint);
+        //var ray = cam.ScreenPointToRay(midPoint);
+        var ray = roomCamera.ScreenPointToRay(screenPosition);
+        //Debug.LogWarning(roomCamera.transform.position);
+        //Debug.LogWarning(ray.origin);
+        Debug.DrawLine(ray.origin, ray.origin - new Vector3(0, 0.5f, 0), Color.yellow);
+        //Debug.LogWarning("oneFinger!" + ray.origin);
+
+
+        RaycastHit hitInfo;
+        if (Physics.Raycast(ray, out hitInfo) && hitInfo.collider.CompareTag("Room"))
+        {
+
+            Debug.DrawLine(ray.origin, hitInfo.point, Color.red);
+            ray.origin = hitInfo.point - new Vector3(0, 1f, 0);
+
+        }
+        if (Physics.Raycast(ray, out hitInfo) && !hitInfo.collider.CompareTag("Wall")) // if the ray is hitting anything
+        {
+            //Debug.Log(!hitInfo.collider.CompareTag("Room"));
+            Debug.DrawLine(ray.origin, hitInfo.point, Color.cyan);
+            targetPosition = new Vector3(hitInfo.point.x, hitInfo.point.y, hitInfo.point.z) + new Vector3(0, 0.5f, 0);
+            //Vector3 targetPosition = cam.ScreenToWorldPoint(midPoint) - offset + new Vector3(0,height,0);
+
+        }
+    }
 
     public void MoveAvatar(WalkingDirections walkDirection)
     {
@@ -259,8 +287,20 @@ public class AvatarController : MonoBehaviour
     {
         if (levelController.viewLevel == ViewLevel.SINGLE_ROOM)
         { 
-            //Debug.Log(targetPosition);
+            Debug.Log("target position: " + targetPosition);
             transform.position = Vector3.MoveTowards(transform.position, targetPosition, 0.3f);
+            if (transform.position != targetPosition)
+            {
+                if (!footStepAudioSource.isPlaying)
+                {
+                    footStepAudioSource.Play();
+                }
+            }
+            else
+            {
+                footStepAudioSource.Stop();
+            }
+
         }
         //        Vector3 o = fpCamera.transform.position;
         //        Vector3 d = fpCamera.transform.forward;
