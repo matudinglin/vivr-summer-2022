@@ -377,10 +377,17 @@ namespace DigitalRubyShared
         {
             if (gesture.State == GestureRecognizerState.Ended)
             {
+                if (intersectionController.latestPOI == null) return;
                 POI latestObj = intersectionController.latestPOI;
-
                 ttsController.Speak("Latest Seen Object is " + latestObj.name);
-                // latestObj.PlayAuditoryIcon();
+                if(latestObj.name.Contains("Chair")|| latestObj.name.Contains("Door"))
+                {
+                    OutlineController outlineController = latestObj.GetComponent<OutlineController>();
+                    if (!outlineController.isEnable())
+                        outlineController.EnableOutline();
+                    else
+                        outlineController.DisableOutline();
+                }
             }
         }
 
