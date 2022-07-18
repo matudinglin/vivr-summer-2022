@@ -5,7 +5,16 @@ using UnityEngine;
 public class CameraController : MonoBehaviour
 {
     // Start is called before the first frame update
+    public enum RoomViewMode
+    {
+        cameraStatic,
+        cameraFollow
+    };
+
     public Camera viewCamera;
+    public Camera followCamera;
+    public Camera mapCamera;
+    public RoomViewMode mode;
     public Vector3 floorPlanViewPoint;
     public GameObject defaultRoom;
     public bool hideOut = false;
@@ -41,6 +50,9 @@ public class CameraController : MonoBehaviour
     float smallSingleRoomViewSize = 12f;
     void Start()
     {
+        avatarCamera.enabled = false;
+        followCamera.enabled = false;
+
         levelController = GetComponent<LevelController>();
         hapticController = GetComponent<HapticController>();
         if (hideOut)
@@ -56,13 +68,13 @@ public class CameraController : MonoBehaviour
     }
     void Update()
     {
-        if (currentRoom != null)
+        if (currentRoom != null && levelController.viewLevel == ViewLevel.SINGLE_ROOM)
         {
-            var roomCenter = currentRoom.transform.position;
-            float prevY = viewCamera.transform.position.y;
-            viewCamera.transform.position = new Vector3(roomCenter.x, prevY, roomCenter.z);
+            //var roomCenter = currentRoom.transform.position;
+            //float prevY = viewCamera.transform.position.y;
+            //viewCamera.transform.position = new Vector3(roomCenter.x, prevY, roomCenter.z);
         }
-        else
+        else if(levelController.viewLevel == ViewLevel.FLOOR_PLAN)
         {
             viewCamera.transform.position = floorPlanViewPoint;
         }
@@ -144,9 +156,10 @@ public class CameraController : MonoBehaviour
         {
             var origY = avatar.transform.position.y;
             var roomPos = room.transform.position;
-            avatar.transform.position = new Vector3(roomPos.x, origY, roomPos.z);// put avatar into the room
+            //avatar.transform.position = new Vector3(roomPos.x, origY, roomPos.z);// put avatar into the room
             viewCamera.enabled = false;
-            avatarCamera.enabled = true;
+            viewCamera = avatarCamera;
+            viewCamera.enabled = true;
             return true;
         }
         else
@@ -165,14 +178,27 @@ public class CameraController : MonoBehaviour
         if (room != null)
         {
             var roomCenter = room.transform.position;
+            //Debug.Log("Room center:" + roomCenter);
+
             float prevY = viewCamera.transform.position.y;
-            avatarCamera.enabled = false;
+            viewCamera.enabled = false;
+            if (mode == RoomViewMode.cameraStatic)
+            {
+                viewCamera = mapCamera;
+                viewCamera.gameObject.transform.position = new Vector3(roomCenter.x, prevY, roomCenter.z);
+                //avatar.transform.position = new Vector3(roomCenter.x, avatar.transform.position.y, roomCenter.z);
+                viewCamera.orthographicSize = singleRoomViewSize;
+
+
+            }
+            else if(mode == RoomViewMode.cameraFollow)
+            {
+                viewCamera = followCamera;
+            }
             viewCamera.enabled = true;
+            avatarController.roomCamera = viewCamera;
             currentRoom = room;
 
-            viewCamera.transform.position = new Vector3(roomCenter.x, prevY, roomCenter.z);
-            avatar.transform.position = new Vector3(roomCenter.x, avatar.transform.position.y, roomCenter.z);
-            viewCamera.orthographicSize = singleRoomViewSize;
 
             return true;
         }
@@ -185,7 +211,8 @@ public class CameraController : MonoBehaviour
     public void Switch2FloorPlan()
     {
         currentRoom = null;
-        avatarCamera.enabled = false;
+        viewCamera.enabled = false;
+        viewCamera = mapCamera;
         viewCamera.enabled = true;
         viewCamera.transform.position = floorPlanViewPoint;
         viewCamera.orthographicSize = floorplanViewSize;
