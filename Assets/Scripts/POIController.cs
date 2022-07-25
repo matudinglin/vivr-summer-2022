@@ -85,6 +85,9 @@ public class POIController : MonoBehaviour
 					poi.ttsPhrase = ttsController.GenerateTTSAudioClip(poi.poiName);
 				}
 				poi.PlayTTS();
+				OutlineController outlineController = poi.GetComponent<OutlineController>();
+				if(outlineController != null)
+					outlineController.ShowOutline();
 			}
 			else if (hintType == HintType.AuditoryIcon)
 			{
