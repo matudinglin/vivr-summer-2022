@@ -260,7 +260,25 @@ namespace DigitalRubyShared
             SRDoubleTapGesture.StateUpdated += SRDoubleTapGestureCallback;
             SRDoubleTapGesture.RequireGestureRecognizerToFail = ATripleTapGesture;
             FingersScript.Instance.AddGesture(SRDoubleTapGesture);
-        } 
+        }
+
+        private void SRInteract()
+        {
+
+            if (Input.touchCount == 1)
+            {
+                Vector3 midPoint = Input.GetTouch(0).position;
+                //Debug.LogWarning("Screen Position: " + midPoint);
+                //var ray = cam.ScreenPointToRay(midPoint);
+                var ray = activeCamera.ScreenPointToRay(midPoint);
+                Debug.DrawLine(ray.origin, ray.origin - new Vector3(0, 5f, 0), Color.yellow);
+                //Debug.LogWarning("oneFinger!" + ray.origin);
+
+
+                intersectionController.Exploring(midPoint);
+            }
+        }
+
 
         // ====================================================================================================================
         // AVATAR Gestures
@@ -581,6 +599,10 @@ namespace DigitalRubyShared
 
         }
 
+        private void FixedUpdate()
+        {
+            SRInteract();
+        }
         private void LateUpdate()
         {
             int touchCount = Input.touchCount;

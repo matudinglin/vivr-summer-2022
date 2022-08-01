@@ -213,6 +213,9 @@ public class IntersectionController : MonoBehaviour
 				POI poi = hitPOI.GetComponent<POI>();
 				if(poi)
 				{
+					Vector3 POIPosition = hitPOI.transform.position;
+					avatarController.targetPOI = hitPOI;
+					avatarController.targetPosition = new Vector3(POIPosition.x, 0f, POIPosition.z);
 					hapticController.PlayPOIFeedback();
 					ttsController.Speak(poi.poiName);
 					exploringPOI = poi;

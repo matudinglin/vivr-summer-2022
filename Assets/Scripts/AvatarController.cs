@@ -33,6 +33,7 @@ public class AvatarController : MonoBehaviour
     private CameraController camControl;
 
     public Vector3 targetPosition;
+    public GameObject targetPOI;
 
     void Start()
     {
@@ -274,6 +275,10 @@ public class AvatarController : MonoBehaviour
     {
 
         Debug.Log("Checking if Enter");
+        if(other.gameObject == targetPOI)
+        {
+            targetPosition = this.transform.position;
+        }
         if (other.collider.gameObject.CompareTag("Wall"))
         {
             Debug.Log("Enter");
@@ -308,7 +313,7 @@ public class AvatarController : MonoBehaviour
         if (levelController.viewLevel == ViewLevel.SINGLE_ROOM)
         { 
             Debug.Log("target position: " + targetPosition);
-            transform.position = Vector3.MoveTowards(transform.position, targetPosition, 0.3f);
+            transform.position = Vector3.MoveTowards(transform.position, targetPosition, 0.1f);
             if (transform.position != targetPosition)
             {
                 if (!footStepAudioSource.isPlaying)
