@@ -470,6 +470,10 @@ PrefabInstance:
       propertyPath: levelController
       value: 
       objectReference: {fileID: 284092122}
+    - target: {fileID: 3046741989275592389, guid: cdf87684b7f3d404fb6c5b5ddad0b011, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3048594715193689681, guid: cdf87684b7f3d404fb6c5b5ddad0b011, type: 3}
       propertyPath: m_Name
       value: Avatar

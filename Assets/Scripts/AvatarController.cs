@@ -312,7 +312,7 @@ public class AvatarController : MonoBehaviour
     {
         if (levelController.viewLevel == ViewLevel.SINGLE_ROOM)
         { 
-            Debug.Log("target position: " + targetPosition);
+            //Debug.Log("target position: " + targetPosition);
             transform.position = Vector3.MoveTowards(transform.position, targetPosition, 0.1f);
             if (transform.position != targetPosition)
             {
